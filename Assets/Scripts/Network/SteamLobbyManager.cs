@@ -1,20 +1,22 @@
-﻿using Steamworks;
-using UnityEngine;
+﻿using FishNet.Managing;           // NetworkManager
+using Steamworks;
 using System.Collections.Generic;
-using FishNet.Managing;
-using System; // for Action
+using UnityEngine;
+// using FishNet.Connection;      // If you later need NetworkConnection
+// using FishNet.Object;          // If you later need NetworkObject
 
 public class SteamLobbyManager : MonoBehaviour
 {
+    public static SteamLobbyManager Instance { get; private set; }
+
     private CSteamID currentLobbyID;
     private const string HostAddressKey = "HostAddress";
 
-    public NetworkManager manager;
-    public FishySteamworks.FishySteamworks fishySteamworks;
+    [SerializeField] private FishySteamworks.FishySteamworks fishySteamworks;
+    [SerializeField] private NetworkManager networkManager;
 
-    // UI events
-    public event Action OnLobbyStateChanged;
-    public event Action OnPlayerListChanged;
+    // Player prefab should be a NetworkObject and registered in Spawnable Prefabs on NetworkManager
+    [SerializeField] private PlayerObjectController playerPrefab;
 
     // Steam callbacks
     protected Callback<LobbyCreated_t> Callback_lobbyCreated;
@@ -23,8 +25,8 @@ public class SteamLobbyManager : MonoBehaviour
     protected Callback<LobbyChatUpdate_t> Callback_lobbyMemberChanged;
 
     // Player tracking
-    public List<CSteamID> lobbyMembers = new List<CSteamID>();
-    public List<string> lobbyMemberNames = new List<string>();
+    [SerializeField] private List<CSteamID> lobbyMembers = new List<CSteamID>();
+    [SerializeField] private List<string> lobbyMemberNames = new List<string>();
 
     // Public properties
     public bool IsInLobby => currentLobbyID.IsValid();
@@ -35,7 +37,12 @@ public class SteamLobbyManager : MonoBehaviour
 
     private void Awake()
     {
-        // Don't risk null parent NRE
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
@@ -46,6 +53,12 @@ public class SteamLobbyManager : MonoBehaviour
             Debug.LogError("Steam not initialized!");
             return;
         }
+
+        if (networkManager == null)
+            networkManager = FindFirstObjectByType<NetworkManager>();
+
+        if (networkManager == null)
+            Debug.LogWarning("NetworkManager not found. Assign it in the inspector.");
 
         SetupCallbacks();
         Debug.Log("Steam Lobby Manager initialized!");
@@ -82,7 +95,7 @@ public class SteamLobbyManager : MonoBehaviour
         }
 
         Debug.Log($"Lobby updated: {lobbyMembers.Count} players");
-        OnPlayerListChanged?.Invoke();
+        // Raise UI events here if needed.
     }
 
     public void CreateLobby(ELobbyType lobbyType, int maxPlayers)
@@ -90,8 +103,6 @@ public class SteamLobbyManager : MonoBehaviour
         Debug.Log("Creating Steam lobby...");
         SteamMatchmaking.CreateLobby(lobbyType, maxPlayers);
     }
-
-    // ===== STEAM CALLBACKS =====
 
     private void OnLobbyCreated(LobbyCreated_t result)
     {
@@ -101,15 +112,13 @@ public class SteamLobbyManager : MonoBehaviour
 
             string personalName = SteamFriends.GetPersonaName();
 
-            // Store host steamID as numeric string to avoid parsing issues
             SteamMatchmaking.SetLobbyData(currentLobbyID, HostAddressKey, SteamUser.GetSteamID().m_SteamID.ToString());
             SteamMatchmaking.SetLobbyData(currentLobbyID, "name", personalName + "'s Game");
 
             Debug.Log("✅ Lobby created successfully: " + currentLobbyID);
 
-            // Refresh players immediately for host
             UpdatePlayerList();
-            OnLobbyStateChanged?.Invoke();
+            StartHostNetworking();
         }
         else
         {
@@ -117,42 +126,71 @@ public class SteamLobbyManager : MonoBehaviour
         }
     }
 
-    public void StartGame()
+    private void StartHostNetworking()
     {
-        if (!IsInLobby) return;
+        if (networkManager == null) return;
 
-        if (SteamUser.GetSteamID() == LobbyOwner)
+        // Set address to self prior to start.
+        fishySteamworks.SetClientAddress(SteamUser.GetSteamID().m_SteamID.ToString());
+
+        if (!networkManager.IsServerStarted)
+            networkManager.ServerManager.StartConnection();
+
+        if (!networkManager.IsClientStarted)
+            networkManager.ClientManager.StartConnection();
+
+        Debug.Log("[SteamLobbyManager] Host networking started (Server + Client).");
+
+        // Spawn host player via PlayerSpawnManager if needed.
+        var spawner = FindFirstObjectByType<PlayerSpawnManager>();
+        spawner?.Invoke("SpawnHostIfMissing", 0f);
+    }
+
+    private void StartClientNetworking()
+    {
+        if (networkManager == null) return;
+
+        string hostAddress = SteamMatchmaking.GetLobbyData(currentLobbyID, HostAddressKey);
+        if (string.IsNullOrWhiteSpace(hostAddress))
         {
-            // Host starts server
-            fishySteamworks.SetClientAddress(SteamUser.GetSteamID().m_SteamID.ToString());
-            fishySteamworks.StartConnection(true);
+            Debug.LogError("[SteamLobbyManager] Host address missing. Cannot start client.");
+            return;
         }
-        else
-        {
-            // Client connects to host
-            string hostAddress = SteamMatchmaking.GetLobbyData(currentLobbyID, HostAddressKey);
-            fishySteamworks.SetClientAddress(hostAddress);
-            fishySteamworks.StartConnection(false);
-        }
+
+        fishySteamworks.SetClientAddress(hostAddress);
+
+        if (!networkManager.IsClientStarted)
+            networkManager.ClientManager.StartConnection();
+
+        Debug.Log($"[SteamLobbyManager] Client networking started to host {hostAddress}.");
     }
 
     private void OnLobbyEntered(LobbyEnter_t result)
     {
         currentLobbyID = new CSteamID(result.m_ulSteamIDLobby);
 
-        if (result.m_EChatRoomEnterResponse == (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess)
+        if (result.m_EChatRoomEnterResponse != (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess)
         {
-            // Show full current roster immediately on join
-            UpdatePlayerList();
-            OnLobbyStateChanged?.Invoke();
+            Debug.LogError($"[SteamLobbyManager] Failed to enter lobby: {(EChatRoomEnterResponse)result.m_EChatRoomEnterResponse}");
+            return;
+        }
 
-            // Configure transport connection target
-            fishySteamworks.SetClientAddress(SteamMatchmaking.GetLobbyData(currentLobbyID, HostAddressKey));
-            fishySteamworks.StartConnection(false);
+        UpdatePlayerList();
+        Debug.Log($"[SteamLobbyManager] Entered lobby {currentLobbyID}.");
+
+        if (networkManager.IsHostStarted)
+        {
+            // Host will get LobbyEnter after LobbyCreated (double callback). Ensure network started.
+            if (!networkManager.IsServerStarted || !networkManager.IsClientStarted)
+            {
+                Debug.Log("[SteamLobbyManager] Host network not started yet, starting now.");
+                StartHostNetworking();
+            }
         }
         else
         {
-            Debug.LogError($"❌ Failed to enter lobby: {(EChatRoomEnterResponse)result.m_EChatRoomEnterResponse}");
+            // Remote client auto-connects.
+            StartClientNetworking();
         }
     }
 
@@ -169,8 +207,6 @@ public class SteamLobbyManager : MonoBehaviour
             currentLobbyID = CSteamID.Nil;
             lobbyMembers.Clear();
             lobbyMemberNames.Clear();
-            OnPlayerListChanged?.Invoke();
-            OnLobbyStateChanged?.Invoke();
             Debug.Log("Left lobby");
         }
     }
@@ -189,16 +225,12 @@ public class SteamLobbyManager : MonoBehaviour
     void Update()
     {
         if (SteamManager.Initialized)
-        {
             SteamAPI.RunCallbacks();
-        }
     }
 
     void OnDestroy()
     {
         if (IsInLobby)
-        {
             LeaveLobby();
-        }
     }
 }

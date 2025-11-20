@@ -91,8 +91,8 @@ public class SteamLobbyUI : MonoBehaviour
     {
         if (InstanceFinder.IsServerStarted)
         {
-            uiToDisable.SetActive(false);
-            return;
+            //uiToDisable.SetActive(false);
+           // return;
         }
 
         bool inLobby = lobbyManager.IsInLobby;

@@ -1,5 +1,4 @@
-﻿// PlayerSteamData.cs (Updated for gameplay)
-using FishNet.Object;
+﻿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using Steamworks;
 using TMPro;

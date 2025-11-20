@@ -337,19 +337,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 71852998}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1860415388}
-        m_TargetAssemblyTypeName: SteamLobbyManager, Assembly-CSharp
-        m_MethodName: CreateLobbyButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &71852998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1125,31 +1113,7 @@ MonoBehaviour:
   startGameButton: {fileID: 2118877839}
   StartGameRequested:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 224653489}
-        m_TargetAssemblyTypeName: LobbyGameStarter, Assembly-CSharp
-        m_MethodName: ChangeGameScene
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: Gameplay
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1860415388}
-        m_TargetAssemblyTypeName: SteamLobbyManager, Assembly-CSharp
-        m_MethodName: StartGame
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: Gameplay
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   lobbyManager: {fileID: 1860415388}
   uiToDisable: {fileID: 817908565}
 --- !u!1 &742284304
@@ -2243,10 +2207,10 @@ PrefabInstance:
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: _playerPrefab
       value: 
-      objectReference: {fileID: 5623310356859677493, guid: 5f265cecebd7b8242826dc19e1926ac2, type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: Spawns.Array.size
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: _addToDefaultScene
@@ -2255,7 +2219,7 @@ PrefabInstance:
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: 'Spawns.Array.data[0]'
       value: 
-      objectReference: {fileID: 791450412}
+      objectReference: {fileID: 1034322287}
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: 'Spawns.Array.data[1]'
       value: 
@@ -2717,6 +2681,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2c95dfde7d73b54dbbdc23155d35d36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1706199517
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1706199518}
+  - component: {fileID: 1706199519}
+  m_Layer: 0
+  m_Name: _PlayerSpawnManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1706199518
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706199517}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1914937337}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1706199519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706199517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7933279c6cb05148b6b9d8a8adf509a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnManager
+  networkManager: {fileID: 1650461587}
+  playerPrefab: {fileID: 8336419685591873144, guid: 59b7ad2dccea9c34ca68b67a6c919f5b, type: 3}
 --- !u!1 &1757793861
 GameObject:
   m_ObjectHideFlags: 0
@@ -2882,8 +2892,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1435e20f4e2bda543847507723cf4d7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SteamLobbyManager
-  manager: {fileID: 1650461587}
   fishySteamworks: {fileID: 1650461583}
+  networkManager: {fileID: 0}
+  playerPrefab: {fileID: 8336419685591873144, guid: 59b7ad2dccea9c34ca68b67a6c919f5b, type: 3}
   lobbyMembers: []
   lobbyMemberNames: []
 --- !u!4 &1860415389
@@ -3053,6 +3064,7 @@ Transform:
   m_Children:
   - {fileID: 1287215256}
   - {fileID: 1860415389}
+  - {fileID: 1706199518}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1942070191

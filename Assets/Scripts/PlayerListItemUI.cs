@@ -1,5 +1,4 @@
-﻿// PlayerListItemUI.cs
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -17,16 +16,14 @@ public class PlayerListItemUI : MonoBehaviour
     {
         playerNameText.text = name;
 
-        // Add (You) to local player name
         if (isLocalPlayer)
         {
             playerNameText.text += " (You)";
         }
 
-        // Add host indicator
         if (isHost)
         {
-            playerNameText.text += " 👑";
+            playerNameText.text += " (Host)";
         }
     }
 
@@ -36,7 +33,7 @@ public class PlayerListItemUI : MonoBehaviour
         {
             avatarImage.sprite = Sprite.Create(
                 avatarTexture,
-                new Rect(0, 0, avatarTexture.width, avatarTexture.height),
+                new Rect(0, 0, -avatarTexture.width, -avatarTexture.height),
                 new Vector2(0.5f, 0.5f)
             );
         }
